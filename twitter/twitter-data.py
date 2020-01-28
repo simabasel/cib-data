@@ -1,9 +1,3 @@
-# 
-# Short Python script which does some simple analytics on the Twitter IO datasets and merged the results
-# in a single file.
-# Author: msuiche
-# 
-
 import pandas as pd
 import numpy as np
 import reverse_geocoder as rg
@@ -12,7 +6,22 @@ import os.path
 import glob, os
 import tldextract
 
-from datetime import date
+from datetime import date, datetime
+import json
+
+def get_json(df):
+    """ Small function to serialise DataFrame dates as 'YYYY-MM-DD' in JSON """
+
+    def convert_timestamp(item_date_object):
+        if isinstance(item_date_object, (pd.Period)):
+            return item_date_object.strftime("%Y-%m")
+        else:
+            return item_date_object
+
+    dict_ = df.to_dict()
+    dict_ = {convert_timestamp(k):v for k, v in dict_.items()}
+
+    return json.dumps(dict_)
 
 def tidy_split(df, column, sep=',', keep=False, domain=False):
     indexes = list()
@@ -95,14 +104,14 @@ def get_users_information(identifier, dir_path, filepath):
     # print(df_account_languages)
 
     dst_languages_file = dir_path + '_' + filepath.replace('_csv_hashed', '_account_languages')
-    if dst_languages_file:
-        df_account_languages.to_csv(dst_languages_file)
+    # if dst_languages_file:
+    #    df_account_languages.to_csv(dst_languages_file)
 
     users_info['users_filename'] = filepath
     users_info['accounts'] = users_count
     # users_info['account_languages'] = account_languages
-    users_info['account_languages'] = df_account_languages.head(25).dropna()["count"].to_json()
-    users_info['account_languages_filename'] = dst_languages_file
+    users_info['account_languages'] = df_account_languages.dropna()["count"].to_json()
+    # users_info['account_languages_filename'] = dst_languages_file
     users_info['total_follower_count'] = total_follower_count
     users_info['total_following_count'] = total_following_count
     users_info['users_information_size'] = users_information_size
@@ -142,6 +151,12 @@ def get_tweets_information(identifier,
     df_tweet_languages = pd.DataFrame(columns = ['tweet_languages', 'count'])
     df_tweet_languages = df_tweet_languages.set_index('tweet_languages')
 
+    df_timeline = pd.DataFrame(columns = ['tweet_time', 'count'])
+    df_timeline = df_timeline.set_index('tweet_time')
+
+    df_tweet_client_name = pd.DataFrame(columns = ['tweet_client_name', 'count'])
+    df_tweet_client_name = df_tweet_client_name.set_index('tweet_client_name')
+
     tweet_time = []
 
     filepath = files[0]
@@ -154,7 +169,9 @@ def get_tweets_information(identifier,
         tweet_information_size += os.path.getsize(dir_path + '/' + filename)
 
         print("[+++] %s" % (filename))
-        df_chunk = pd.read_csv(dir_path + '/' + filename, chunksize=500000, usecols=["latitude","longitude","quote_count","reply_count","like_count","retweet_count","hashtags", "urls", "tweet_language", "tweet_time"])
+        df_chunk = pd.read_csv(dir_path + '/' + filename, chunksize=500000, 
+            usecols=["tweet_client_name", "latitude","longitude","quote_count","reply_count","like_count","retweet_count","hashtags", "urls", "tweet_language", "tweet_time"],
+            parse_dates=["tweet_time"])
 
         for chunk in df_chunk:
             total_quote_count += chunk['quote_count'].sum()
@@ -194,27 +211,41 @@ def get_tweets_information(identifier,
             df_tweet_languages = df_tweet_languages.append(df_value_counts)
             df_tweet_languages = df_tweet_languages.groupby(df_tweet_languages.index).sum()
 
+            # Client name
+            value_counts = chunk['tweet_client_name'].value_counts()
+            df_value_counts = value_counts.rename_axis('tweet_client_name').to_frame('count')
+            df_tweet_client_name = df_tweet_client_name.append(df_value_counts)
+            df_tweet_client_name = df_tweet_client_name.groupby(df_tweet_client_name.index).sum()
+
+            # Timeline information
+            df_date_count = chunk['tweet_time'].groupby(chunk.tweet_time.dt.to_period("M")).agg('count')
+            df_date_count = df_date_count.rename_axis('tweet_time').to_frame('count')
+            df_timeline = df_timeline.append(df_date_count)
+            df_timeline = df_timeline.groupby(df_timeline.index).sum()
+
             tweet_time.append(chunk["tweet_time"].min())
             tweet_time.append(chunk["tweet_time"].max())
 
     print("[***][%s]\ntweets_count: %d\ntotal_quote_count: %d\ntotal_reply_count: %d\ntotal_like_count: %d\ntotal_retweet_count: %d\n" % (filepath, tweets_count, total_quote_count, total_reply_count, total_like_count, total_retweet_count))
 
     filepath = filepath.split('/')[-1]
-    dst_countries_file = dir_path + '_' + filepath.replace('_csv_hashed', '_countries')
+    # dst_countries_file = dir_path + '_' + filepath.replace('_csv_hashed', '_countries')
     dst_hashtags_file = dir_path + '_' + filepath.replace('_csv_hashed', '_hashtags')
     dst_domains_file = dir_path + '_' + filepath.replace('_csv_hashed', '_domains')
-    dst_languages_file = dir_path + '_' + filepath.replace('_csv_hashed', '_languages')
+    # dst_languages_file = dir_path + '_' + filepath.replace('_csv_hashed', '_languages')
 
+    df_src_cc = df_src_cc[df_src_cc.index != '']
     df_src_cc = df_src_cc.sort_values(by =['count'], ascending=False)
     # print(df_src_cc)
-    if dst_countries_file:
-        df_src_cc.to_csv(dst_countries_file, encoding='utf-8-sig')
+    # if dst_countries_file:
+    #    df_src_cc.to_csv(dst_countries_file, encoding='utf-8-sig')
 
     df_hashtags = df_hashtags[df_hashtags.index != '']
     df_hashtags = df_hashtags.sort_values(by =['count'], ascending=False)
     # print(df_hashtags)
     if dst_hashtags_file:
-        df_hashtags.to_csv(dst_hashtags_file, encoding='utf-8-sig')
+        # Save top 1K hashtags
+        df_hashtags.head(1000).to_csv(dst_hashtags_file, encoding='utf-8-sig')
 
     df_domains = df_domains[df_domains.index != '']
     df_domains = df_domains.sort_values(by =['count'], ascending=False)
@@ -222,11 +253,14 @@ def get_tweets_information(identifier,
     if dst_domains_file:
         df_domains.to_csv(dst_domains_file, encoding='utf-8-sig')
 
+    df_tweet_client_name = df_tweet_client_name[df_tweet_client_name.index != '']
+    df_tweet_client_name = df_tweet_client_name.sort_values(by =['count'], ascending=False)
+
     df_tweet_languages = df_tweet_languages[df_tweet_languages.index != '']
     df_tweet_languages = df_tweet_languages.sort_values(by =['count'], ascending=False)
     # print(df_hashtags)
-    if dst_languages_file:
-        df_tweet_languages.to_csv(dst_languages_file, encoding='utf-8-sig')
+    # if dst_languages_file:
+    #    df_tweet_languages.to_csv(dst_languages_file, encoding='utf-8-sig')
 
     df_tweet_time = pd.DataFrame(tweet_time)
 
@@ -244,17 +278,21 @@ def get_tweets_information(identifier,
     # tweets_info['domains'] = ",".join(df_not_null.head(25).dropna().index.to_list())
     tweets_info['domains'] = df_not_null.head(25).dropna()["count"].to_json()
     tweets_info['domains_filename'] = dst_domains_file
-    df_not_null = df_src_cc[df_src_cc.index != '']
+    
     # tweets_info['tweets_from'] = ",".join(df_not_null.dropna().index.to_list())
-    tweets_info['tweets_from'] = df_not_null.dropna()["count"].to_json()
-    tweets_info['tweets_from_filename'] = dst_countries_file
+    tweets_info['georeverse_codes'] = df_src_cc.dropna()["count"].to_json()
+    # tweets_info['tweets_from_filename'] = dst_countries_file
 
-    df_not_null = df_tweet_languages[df_tweet_languages.index != '']
-    tweets_info['tweet_languages'] = df_not_null.dropna()["count"].to_json()
-    tweets_info['tweet_languages_filename'] = dst_languages_file
+    # df_not_null = df_tweet_languages[df_tweet_languages.index != '']
+    tweets_info['tweet_languages'] = df_tweet_languages.dropna()["count"].to_json()
+    # tweets_info['tweet_languages_filename'] = dst_languages_file
+
+    tweets_info['tweet_client_names'] = df_tweet_client_name.dropna()["count"].to_json()
 
     tweets_info['first_tweet'] = df_tweet_time[0].min()
     tweets_info['last_tweet'] = df_tweet_time[0].max()
+
+    tweets_info['activity_timeline'] = get_json(df_timeline["count"])
 
     tweets_info['tweets_information_size'] = tweet_information_size
 
