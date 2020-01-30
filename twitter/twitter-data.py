@@ -233,6 +233,7 @@ def get_tweets_information(identifier,
     dst_hashtags_file = dir_path + '_' + filepath.replace('_csv_hashed', '_hashtags')
     dst_domains_file = dir_path + '_' + filepath.replace('_csv_hashed', '_domains')
     # dst_languages_file = dir_path + '_' + filepath.replace('_csv_hashed', '_languages')
+    dst_clients_file = dir_path + '_' + filepath.replace('_csv_hashed', '_clients')
 
     df_src_cc = df_src_cc[df_src_cc.index != '']
     df_src_cc = df_src_cc.sort_values(by =['count'], ascending=False)
@@ -244,17 +245,22 @@ def get_tweets_information(identifier,
     df_hashtags = df_hashtags.sort_values(by =['count'], ascending=False)
     # print(df_hashtags)
     if dst_hashtags_file:
-        # Save top 1K hashtags
-        df_hashtags.head(1000).to_csv(dst_hashtags_file, encoding='utf-8-sig')
+        # Save top 10K hashtags
+        df_hashtags.head(10000).to_csv(dst_hashtags_file, encoding='utf-8-sig')
 
     df_domains = df_domains[df_domains.index != '']
     df_domains = df_domains.sort_values(by =['count'], ascending=False)
     # print(df_hashtags)
     if dst_domains_file:
-        df_domains.to_csv(dst_domains_file, encoding='utf-8-sig')
+        # Save top 10K domains
+        df_domains.head(10000).to_csv(dst_domains_file, encoding='utf-8-sig')
 
     df_tweet_client_name = df_tweet_client_name[df_tweet_client_name.index != '']
     df_tweet_client_name = df_tweet_client_name.sort_values(by =['count'], ascending=False)
+
+    # print(df_hashtags)
+    if dst_clients_file:
+        df_tweet_client_name.to_csv(dst_clients_file, encoding='utf-8-sig')
 
     df_tweet_languages = df_tweet_languages[df_tweet_languages.index != '']
     df_tweet_languages = df_tweet_languages.sort_values(by =['count'], ascending=False)
@@ -274,11 +280,10 @@ def get_tweets_information(identifier,
     # tweets_info['hashtags'] = ",".join(df_not_null.head(25).dropna().index.to_list())
     tweets_info['hashtags'] = df_not_null.head(25).dropna()["count"].to_json()
     tweets_info['hashtags_filename'] = dst_hashtags_file
-    df_not_null = df_domains[df_domains.index != '']
     # tweets_info['domains'] = ",".join(df_not_null.head(25).dropna().index.to_list())
-    tweets_info['domains'] = df_not_null.head(25).dropna()["count"].to_json()
+    tweets_info['domains'] = df_domains.head(25).dropna()["count"].to_json()
     tweets_info['domains_filename'] = dst_domains_file
-    
+
     # tweets_info['tweets_from'] = ",".join(df_not_null.dropna().index.to_list())
     tweets_info['georeverse_codes'] = df_src_cc.dropna()["count"].to_json()
     # tweets_info['tweets_from_filename'] = dst_countries_file
@@ -287,7 +292,8 @@ def get_tweets_information(identifier,
     tweets_info['tweet_languages'] = df_tweet_languages.dropna()["count"].to_json()
     # tweets_info['tweet_languages_filename'] = dst_languages_file
 
-    tweets_info['tweet_client_names'] = df_tweet_client_name.dropna()["count"].to_json()
+    tweets_info['tweet_client_names'] = df_tweet_client_name.head(25).dropna()["count"].to_json()
+    tweets_info['tweet_client_names_filename'] = dst_clients_file
 
     tweets_info['first_tweet'] = df_tweet_time[0].min()
     tweets_info['last_tweet'] = df_tweet_time[0].max()
