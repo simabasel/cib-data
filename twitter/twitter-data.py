@@ -439,11 +439,6 @@ def processSept2019():
     users_info.update(tweets_info)
     rows_list.append(users_info)
 
-    users_info = get_users_information("", '2019_09', r'egypt_uae_082019_users_csv_hashed.csv')
-    tweets_info = get_tweets_information("", '2019_09', [r'egypt_uae_082019_tweets_csv_hashed.csv'])
-    users_info.update(tweets_info)
-    rows_list.append(users_info)
-
     users_info = get_users_information("", '2019_09', r'saudi_arabia_082019_users_csv_hashed.csv')
     tweets_info = get_tweets_information("", '2019_09', [r'saudi_arabia_082019_tweets_csv_hashed.csv'])
     users_info.update(tweets_info)
