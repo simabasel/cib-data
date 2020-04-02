@@ -109,6 +109,7 @@ def get_users_information(identifier, dir_path, filepath):
 
     users_info['users_filename'] = filepath
     users_info['accounts'] = users_count
+    users_info['accounts_reported'] = users_count
     # users_info['account_languages'] = account_languages
     users_info['account_languages'] = df_account_languages.dropna()["count"].to_json()
     # users_info['account_languages_filename'] = dst_languages_file
@@ -293,7 +294,7 @@ def get_tweets_information(identifier,
     # tweets_info['tweet_languages_filename'] = dst_languages_file
 
     tweets_info['tweet_client_names'] = df_tweet_client_name.head(25).dropna()["count"].to_json()
-    tweets_info['tweet_client_names_filename'] = dst_clients_file
+    # tweets_info['tweet_client_names_filename'] = dst_clients_file
 
     tweets_info['first_tweet'] = df_tweet_time[0].min()
     tweets_info['last_tweet'] = df_tweet_time[0].max()
