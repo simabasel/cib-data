@@ -478,18 +478,97 @@ def processDec2019():
     df_global = pd.DataFrame(rows_list)
     df_global.to_csv('2019_12_twitter-data.csv', index=False, encoding='utf-8-sig')
 
+
+def processMarch2020():
+    if os.path.isfile('2020_03_twitter-data.csv'):
+        return
+
+    rows_list = []
+    users_info = get_users_information("", '2020_03', r'032020_users_csv_hashed.csv')
+    tweets_info = get_tweets_information("", '2020_03', [r'032020_tweets_csv_hashed.csv'])
+    users_info.update(tweets_info)
+    rows_list.append(users_info)
+
+    df_global = pd.DataFrame(rows_list)
+    df_global.to_csv('2020_03_twitter-data.csv', index=False, encoding='utf-8-sig')
+
+def processApril2020(month_id):
+    if os.path.isfile(month_id + '_twitter-data.csv'):
+        return
+
+    rows_list = []
+    
+    users_info = get_users_information("", month_id, r'egypt_022020_users_csv_hashed.csv')
+    tweets_info = get_tweets_information("", month_id, [
+        r'hashed_2020_04_egypt_022020_egypt_022020_tweets_csv_hashed/egypt_022020_tweets_csv_hashed.csv'])
+    users_info.update(tweets_info)
+    rows_list.append(users_info)
+    
+    users_info = get_users_information("", month_id, r'honduras_022020_users_csv_hashed.csv')
+    tweets_info = get_tweets_information("", month_id, [
+        r'honduras_022020_tweets_csv_hashed.csv'])
+    users_info.update(tweets_info)
+    rows_list.append(users_info)
+    
+    users_info = get_users_information("", month_id, r'indonesia_022020_users_csv_hashed.csv')
+    tweets_info = get_tweets_information("", month_id, [
+        r'indonesia_022020_tweets_csv_hashed.csv'])
+    users_info.update(tweets_info)
+    rows_list.append(users_info)
+
+    users_info = get_users_information("", month_id, r'sa_eg_ae_022020_users_csv_hashed.csv')
+    tweets_info = get_tweets_information("", month_id, [
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_01.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_02.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_03.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_04.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_05.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_06.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_07.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_08.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_09.csv',
+        r'sa_eg_ae_022020_tweets_csv_hashed/sa_eg_ae_022020_tweets_csv_hashed_10.csv'])
+    users_info.update(tweets_info)
+    rows_list.append(users_info)
+
+    users_info = get_users_information("", month_id, r'serbia_022020_users_csv_hashed.csv')
+    tweets_info = get_tweets_information("", month_id, [
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_01.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_02.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_03.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_04.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_05.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_06.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_07.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_08.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_09.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_10.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_11.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_12.csv',
+        r'serbia_022020_tweets_csv_hashed/serbia_022020_tweets_csv_hashed_13.csv'])
+    users_info.update(tweets_info)
+    rows_list.append(users_info)
+
+    df_global = pd.DataFrame(rows_list)
+    df_global.to_csv(month_id + '_twitter-data.csv', index=False, encoding='utf-8-sig')
+
+
 print("[!] Processing the Twitter released in October 2018...")
-processOct2018()
+# processOct2018()
 print("[!] Processing the Twitter released in January 2019...")
-processJan2019()
+# processJan2019()
 print("[!] Processing the Twitter released in June 2019...")
-processJune2019()
+# processJune2019()
 print("[!] Processing the Twitter released in August 2019...")
-processAug2019()
+# processAug2019()
 print("[!] Processing the Twitter released in September 2019...")
-processSept2019()
+# processSept2019()
 print("[!] Processing the Twitter released in December 2019...")
-processDec2019()
+# processDec2019()
+print("[!] Processing the Twitter released in March 2020...")
+processMarch2020()
+print("[!] Processing the Twitter released in April 2020...")
+processApril2020('2020_04')
 
 df = pd.concat(map(pd.read_csv, glob.glob(os.path.join('', "*twitter-data.csv"))))
 df.to_csv('twitter-data.csv', index=False, encoding='utf-8-sig')
